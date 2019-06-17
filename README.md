@@ -1,5 +1,5 @@
-[![Build Status](https://travis-ci.org/anant-sharma/node-boilerplate.svg?branch=master)](https://travis-ci.org/anant-sharma/node-boilerplate)
+[![Build Status](https://travis-ci.org/anant-sharma/gdrive-broker.svg?branch=master)](https://travis-ci.org/anant-sharma/gdrive-broker)
 
-# Node Boilerplate
+# GDrive Broker
 
-Boilerplate for nodejs applications
+Broker for Google Drive APIs
