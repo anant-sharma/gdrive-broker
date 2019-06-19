@@ -2,9 +2,8 @@
  * Import Dependencies
  */
 import * as express from 'express';
-import { v4 as uuidv4 } from 'uuid';
+import { Request, Response } from 'express-serve-static-core';
 import { GAuth } from '../../../../controllers/v1/gauth';
-import { Redis } from '../../../../datasources/redis';
 
 /**
  * Initialize Router
@@ -14,7 +13,7 @@ const router = express.Router();
 /**
  * Bind Routes
  */
-router.get('/', async (req: express.Request, res: express.Response) => {
+router.get('/', async (req: Request, res: Response) => {
     try {
         const url = await new GAuth().getAuthUrl();
         res.redirect(url);
@@ -25,22 +24,12 @@ router.get('/', async (req: express.Request, res: express.Response) => {
     }
 });
 
-router.get('/oauth2callback', async (req: express.Request, res: express.Response) => {
-    const { code } = req.query;
-    const gAuth = new GAuth();
-
+router.get('/oauth2callback', async (req: Request, res: Response) => {
     try {
-        const tokens = await gAuth.getTokens(code);
-        gAuth.setCredentials(tokens);
+        const { code } = req.query;
         res.status(200).json({
-            oauth2Client: gAuth.oauth2Client,
+            oauth2Client: new GAuth().handleOAuth2Callback(code),
         });
-
-        /**
-         * Add Entry in Redis
-         */
-        const redis = new Redis();
-        redis.set(uuidv4(), JSON.stringify(gAuth.oauth2Client));
     } catch (e) {
         res.status(400).json({
             error: e,

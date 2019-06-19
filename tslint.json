@@ -6,7 +6,8 @@
         "no-console": [true, "warn"],
         "quotemark": [true, "single"],
         "indent": [true],
-        "jsdoc-format": [false, "check-multiline-start"]
+        "jsdoc-format": [false, "check-multiline-start"],
+        "no-implicit-dependencies": [false]
     },
     "rulesDirectory": []
 }

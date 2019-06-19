@@ -7,10 +7,14 @@
  * Module Dependencies
  */
 import { google } from 'googleapis';
+import { OAuth2Client } from 'googleapis-common';
+import { v4 as uuidv4 } from 'uuid';
 import { googleKeys } from '../../../config/config';
+import { Redis } from '../../../datasources/redis';
 
 export class GAuth {
-    public oauth2Client: any;
+    private oauth2Client: OAuth2Client;
+    private redis: Redis;
 
     private scopes = ['https://www.googleapis.com/auth/drive.appfolder', 'https://www.googleapis.com/auth/drive.file'];
 
@@ -28,6 +32,8 @@ export class GAuth {
         this.oauth2Client.on('tokens', (tokens: any) => {
             this.oauth2Client.setCredentials(tokens);
         });
+
+        this.redis = new Redis();
     }
 
     public getAuthUrl() {
@@ -43,5 +49,30 @@ export class GAuth {
 
     public setCredentials(tokens: any) {
         this.oauth2Client.credentials = tokens;
+    }
+
+    public handleOAuth2Callback(code: string): Promise<OAuth2Client> {
+        return new Promise(async (resolve, reject) => {
+            try {
+                /**
+                 * Fetch Tokens corresponding to provided code
+                 */
+                const tokens = await this.getTokens(code);
+
+                /**
+                 * Set Credentials in OAuth Client
+                 */
+                this.setCredentials(tokens);
+
+                /**
+                 * Add Entry in Redis
+                 */
+                this.redis.set(uuidv4(), JSON.stringify(this.oauth2Client));
+
+                resolve(this.oauth2Client);
+            } catch (e) {
+                reject(e);
+            }
+        });
     }
 }
