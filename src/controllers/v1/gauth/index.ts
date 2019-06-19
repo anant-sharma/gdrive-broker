@@ -8,6 +8,7 @@
  */
 import { google } from 'googleapis';
 import { OAuth2Client } from 'googleapis-common';
+import { merge as _merge } from 'lodash';
 import { JWT } from '../../../common/jwt';
 import { googleKeys } from '../../../config/config';
 import { Redis } from '../../../datasources/redis';
@@ -92,6 +93,28 @@ export class GAuth {
             } catch (e) {
                 reject(e);
             }
+        });
+    }
+
+    public fetchAuthToken(userId: string): Promise<OAuth2Client> {
+        return new Promise(async (resolve, reject) => {
+            /**
+             * Fetch Entry from Redis
+             */
+            const oauth2ClientString: string =
+                (await this.redis.get(userId).catch(e => {
+                    reject(e);
+                    return;
+                })) + '';
+
+            if (!oauth2ClientString) {
+                reject(new Error('Invalid Email Address'));
+                return;
+            }
+
+            const token = JSON.parse(oauth2ClientString);
+
+            resolve(_merge(this.oauth2Client, token));
         });
     }
 }
