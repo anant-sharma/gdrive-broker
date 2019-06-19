@@ -27,8 +27,10 @@ router.get('/', async (req: Request, res: Response) => {
 router.get('/oauth2callback', async (req: Request, res: Response) => {
     try {
         const { code } = req.query;
+        const oauth2Client = await new GAuth().handleOAuth2Callback(code);
+
         res.status(200).json({
-            oauth2Client: new GAuth().handleOAuth2Callback(code),
+            oauth2Client,
         });
     } catch (e) {
         res.status(400).json({

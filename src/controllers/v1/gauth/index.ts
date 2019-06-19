@@ -8,7 +8,7 @@
  */
 import { google } from 'googleapis';
 import { OAuth2Client } from 'googleapis-common';
-import { v4 as uuidv4 } from 'uuid';
+import { JWT } from '../../../common/jwt';
 import { googleKeys } from '../../../config/config';
 import { Redis } from '../../../datasources/redis';
 
@@ -16,7 +16,15 @@ export class GAuth {
     private oauth2Client: OAuth2Client;
     private redis: Redis;
 
-    private scopes = ['https://www.googleapis.com/auth/drive.appfolder', 'https://www.googleapis.com/auth/drive.file'];
+    private scopes = [
+        // GDrive Scopes
+        'https://www.googleapis.com/auth/drive.appfolder',
+        'https://www.googleapis.com/auth/drive.file',
+
+        // People API Scopes
+        'https://www.googleapis.com/auth/userinfo.profile',
+        'https://www.googleapis.com/auth/userinfo.email',
+    ];
 
     constructor() {
         /**
@@ -57,7 +65,7 @@ export class GAuth {
                 /**
                  * Fetch Tokens corresponding to provided code
                  */
-                const tokens = await this.getTokens(code);
+                const { tokens } = await this.getTokens(code);
 
                 /**
                  * Set Credentials in OAuth Client
@@ -65,9 +73,20 @@ export class GAuth {
                 this.setCredentials(tokens);
 
                 /**
-                 * Add Entry in Redis
+                 * Get Client Email Address
                  */
-                this.redis.set(uuidv4(), JSON.stringify(this.oauth2Client));
+                const { credentials: { id_token: token = null } = {} } = this.oauth2Client;
+
+                if (token) {
+                    const client = JWT.decode(token);
+                    /**
+                     * Add Entry in Redis
+                     */
+                    this.redis.set(client.email, JSON.stringify(this.oauth2Client)).catch(e => {
+                        reject(e);
+                        return;
+                    });
+                }
 
                 resolve(this.oauth2Client);
             } catch (e) {
