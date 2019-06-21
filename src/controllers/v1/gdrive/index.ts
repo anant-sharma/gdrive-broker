@@ -2,6 +2,7 @@
  * This file contains the code required
  * to setup google drive interactions.
  */
+import * as fs from 'fs-extra';
 import { drive_v3, google } from 'googleapis';
 import { OAuth2Client } from 'googleapis-common';
 
@@ -29,5 +30,25 @@ export class GDrive {
 
             resolve(list);
         });
+    }
+
+    public async upload(file: any) {
+        const fileMetadata = {
+            name: 'photo.jpg',
+        };
+        const media = {
+            body: fs.createReadStream(file.path),
+            mimeType: 'image/jpeg',
+        };
+        const uploadedFile = await this.service.files
+            .create({
+                fields: 'id',
+                media,
+            })
+            .catch(e => {
+                console.trace(e);
+            });
+
+        return uploadedFile;
     }
 }

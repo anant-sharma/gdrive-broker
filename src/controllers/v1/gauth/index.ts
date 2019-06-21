@@ -101,11 +101,10 @@ export class GAuth {
             /**
              * Fetch Entry from Redis
              */
-            const oauth2ClientString: string =
-                (await this.redis.get(userId).catch(e => {
-                    reject(e);
-                    return;
-                })) + '';
+            const oauth2ClientString: string | void | null = await this.redis.get(userId).catch(e => {
+                reject(e);
+                return;
+            });
 
             if (!oauth2ClientString) {
                 reject(new Error('Invalid Email Address'));
